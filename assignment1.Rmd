@@ -1,0 +1,70 @@
+---
+title: "Reproducible Research: Peer Assessment 1"
+output: 
+  html_document:
+    keep_md: true
+date: "Sunday, March 15, 2015"
+---
+
+
+## Loading and preprocessing the data
+---------------------------------------------------------------
+For this assignment 
+-It loads first all data from csv file
+-It replace NA values with the mean value
+-Then it uses aggregate funtion to group information
+-It assigns columns names
+-Creates a barplot 
+
+```{r echo=TRUE}
+original_data <- read.csv("activity.csv", colClasses=c(date="Date"));
+sum_data <- tapply(original_data$steps, original_data$date, sum);
+
+```
+
+## What is mean total number of steps taken per day?
+---------------------------------------------------------------
+-NA values are not excluded in this graphic, so mean value is different
+```{r echo=TRUE}
+hist(sum_data, xlab = "Daily Steps Total", ylab = "Num. of Days", main = "Daily Step Totals", col = "blue", ylim = c(0,30));
+## Total steps mean and median
+mean(sum_data, na.rm=TRUE);
+median(sum_data, na.rm=TRUE);
+```
+
+## What is the average daily activity pattern?
+---------------------------------------------------------------
+-Graphic created on dates so I created a two columns dataframe one column contains timestamp and the other step values
+```{r echo=TRUE}
+mean_act_data <- aggregate(original_data$steps ~ original_data$interval, FUN = "mean");
+colnames(mean_act_data) <- c("interval","steps");
+plot(mean_act_data, type="l", xlab = "Interval (mins)", ylab = "Avg. of Steps", main = "Avg. Daily Activity Pattern")
+with(mean_act_data,interval[steps==max(steps)])
+max(mean_act_data[,2])
+```
+
+## Imputing missing values
+---------------------------------------------------------------
+-In this graphic I replace NA with average value, and as we could se mean and median are modified
+```{r echo=TRUE}
+summary(original_data$steps)
+original_miss_data <- merge(original_data, mean_act_data, by.x="interval", by.y="interval")
+original_miss_data$steps.x[is.na(original_miss_data$steps.x)] <-original_miss_data$steps.y[is.na(original_miss_data$steps.x)]
+
+mergesum_data <- tapply(original_miss_data$steps.x, original_miss_data$date, sum);
+hist(mergesum_data, xlab = "Daily Step Total", ylab = "Num. of Days", main ="Daily Step Totals", ylim = c(0,40));
+mean(mergesum_data);
+median(mergesum_data);
+```
+
+## Are there differences in activity patterns between weekdays and weekends?
+```{r echo=TRUE}
+week_days <- weekdays(original_miss_data$date);
+pattern_data <- cbind(original_miss_data,week_days);
+pattern_data2 <- ifelse (pattern_data$week_days %in% c("Saturday","Sunday"), "weekend", "weekday");
+pattern_data <- cbind(pattern_data, pattern_data2);
+weekday <- pattern_data[pattern_data$pattern_data2=="weekday",];
+weekday_agg <- aggregate(weekday$steps.x ~ weekday$interval, FUN = "mean")
+
+plot(weekday_agg, type="l", xlab = "Interval (minutes)", ylab = "Average Number of Steps", main = "Average Weekday Daily Activity Pattern", ylim = c(0,250))
+```

@@ -1,25 +1,59 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
+title: "Assignment1"
+output: html_document
+html_document:
     keep_md: true
 ---
 
+Loading and preprocessing the data
+---------------------------------------------------------------
+For this assignment 
+-It loads first all data from csv file
+-It replace NA values with the mean value
+-Then it uses aggregate funtion to group information
+-It assigns columns names
+-Creates a barplot 
 
-## Loading and preprocessing the data
+```{r}
+fullActivity<-read.csv("activity.csv")
+rawOriginalData<-fullActivity
+activityPerDay<-aggregate(fullActivity$steps, by=list(fullActivity$date), mean)
+colnames(activityPerDay)<-c("Date","AvgStepsDay")
 
+```
 
+What is mean total number of steps taken per day?
+---------------------------------------------------------------
+-NA values are not excluded in this graphic, so mean value is different
+```{r}
+barplot(activityPerDay$AvgStepsDay, names.arg=activityPerDay$Date, ylab="Steps", xlab="Dates", main="Average Steps Per Day (Oct-Nov 2012)")
+mean(activityPerDay$AvgStepsDay)
+median(activityPerDay$AvgStepsDay)
+```
 
-## What is mean total number of steps taken per day?
+What is the average daily activity pattern?
+---------------------------------------------------------------
+-Graphic created on dates so I created a two columns dataframe one column contains timestamp and the other step values
+```{r}
+df<-data.frame(date=strptime(as.character(paste(data$date,paste(substr(formatC(data$interval, width=4, flag="0"),1,2), ":", substr(formatC(data$interval, width=4, flag="0"),3,4),sep = ""))), format="%Y-%m-%d %H:%M"),steps=data$steps)
+d.range<-range(df$date)
+d.list <- seq(d.range[1], d.range[2], by='day')
+par(mar = c(0.5, 4, 0, 1), oma = c(3, 0, 4, 0), mfcol = c(2,1))
+plot(steps ~ date, data=df, type="l", ylab="Steps", xlab="Date" , xaxt='n', las=1, cex.axis=0.75, col="blue") 
+axis.POSIXct(at=d.list, side=1, format="%b-%d", cex.axis=0.75)
+mtext('Activity Monitoring Experiment', outer=TRUE, line=2, font=2)
+```
 
-
-
-## What is the average daily activity pattern?
-
-
-
-## Imputing missing values
-
-
-
-## Are there differences in activity patterns between weekdays and weekends?
+Imputing missing values
+---------------------------------------------------------------
+-In this graphic I replace NA with average value, and as we could se mean and median are modified
+```{r}
+missingValues<-subset(rawOriginalData, is.na(rawOriginalData$steps))
+nrow(missingValues)
+fullActivity$steps[is.na(fullActivity$steps)]<-mean(fullActivity$steps, na.rm=TRUE)
+activityPerDay<-aggregate(fullActivity$steps, by=list(fullActivity$date), mean)
+colnames(activityPerDay)<-c("Date","AvgStepsDay")
+barplot(activityPerDay$AvgStepsDay, names.arg=activityPerDay$Date, ylab="Steps", xlab="Dates", main="Average Steps Per Day (Oct-Nov 2012)")
+mean(activityPerDay$AvgStepsDay)
+median(activityPerDay$AvgStepsDay)
+```
